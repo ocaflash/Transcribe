@@ -11,13 +11,14 @@ router = APIRouter()
 
 @router.post("/upload")
 async def upload_file(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+        file: UploadFile = File(...),
+        db: Session = Depends(get_db)
 ):
     file_repository = FileRepository(db)
+    file_location = f"/tmp/{file.filename}"
 
     try:
-        file_location = f"/tmp/{file.filename}"
+        # Save the file
         with open(file_location, "wb+") as file_object:
             file_object.write(file.file.read())
 
@@ -27,7 +28,7 @@ async def upload_file(
         transcription_result = transcribe_audio(file_location)
         logger.debug(f"Transcription result: {transcription_result}")
 
-        if transcription_result["original_text"] == "" or transcription_result["original_text"] == "[recognition failed]":
+        if transcription_result["original_text"]=="" or transcription_result["original_text"]=="[recognition failed]":
             return {"error": "Speech recognition failed", "details": transcription_result}
 
         db_file = file_repository.create_file(
