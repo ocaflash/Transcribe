@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
-from models import File as FileModel, Transcription as TranscriptionModel
 from database import get_db
 from services.transcription import transcribe_audio
+from repositories.file_repository import FileRepository
 import os
 import logging
 
@@ -14,6 +14,8 @@ async def upload_file(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
+    file_repository = FileRepository(db)
+
     try:
         file_location = f"/tmp/{file.filename}"
         with open(file_location, "wb+") as file_object:
@@ -28,23 +30,18 @@ async def upload_file(
         if transcription_result["original_text"] == "" or transcription_result["original_text"] == "[recognition failed]":
             return {"error": "Speech recognition failed", "details": transcription_result}
 
-        db_file = FileModel(
+        db_file = file_repository.create_file(
             filename=file.filename,
             file_type=file.content_type,
             file_path=file_location,
             status="transcribed"
         )
-        db.add(db_file)
-        db.commit()
-        db.refresh(db_file)
 
-        db_transcription = TranscriptionModel(
+        file_repository.create_transcription(
             file_id=db_file.id,
             text=transcription_result["original_text"],
             language=transcription_result.get("original_language", "unknown")
         )
-        db.add(db_transcription)
-        db.commit()
 
         # Remove temporary file
         os.remove(file_location)
@@ -59,4 +56,3 @@ async def upload_file(
     except Exception as e:
         logger.error(f"Error in upload_file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
