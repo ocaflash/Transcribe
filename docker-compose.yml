@@ -1,18 +1,21 @@
-# docker-compose.yml
 services:
-  api:
-    build: ./api
+  app:
+    build:
+      context: app
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     env_file:
       - .env
     depends_on:
       - db
+    environment:
+      - PYTHONPATH=/app
 
   db:
     image: postgres:13
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env

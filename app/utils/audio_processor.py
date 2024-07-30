@@ -14,6 +14,7 @@ class AudioProcessor:
         self.file_path = file_path
         self.wav_file_path = self.convert_to_wav()
 
+
     def get_audio_format(self):
         mime = magic.Magic(mime=True)
         file_type = mime.from_file(self.file_path)
@@ -24,31 +25,26 @@ class AudioProcessor:
         if not isinstance(self.file_path, str):
             raise TypeError(f"Expected self.file_path to be a string, got {type(self.file_path).__name__}")
 
+        audio_format = self.get_audio_format()
+        if audio_format=='wav':
+            return self.file_path
+
         wav_path = self.file_path.rsplit('.', 1)[0] + '.wav'
-        try:
-            command = [
-                'ffmpeg', '-i', self.file_path,
-                '-ar', '16000', '-ac', '1',
-                wav_path
-            ]
-            result = subprocess.run(command, stderr=subprocess.PIPE, text=True)
-            if result.returncode!=0:
-                logger.error(f"ffmpeg error: {result.stderr}")
-                raise RuntimeError(f"ffmpeg error: {result.stderr}")
-        except Exception as e:
-            logger.error(f"Error converting to WAV: {str(e)}")
-            raise
-        return wav_path
 
-
-    def split_audio(self, segment_length_ms=30000):
         try:
-            audio = AudioSegment.from_wav(self.wav_file_path)
-        except Exception as e:
-            logger.error(f"Error loading WAV file: {str(e)}")
+            # Используем subprocess для вызова ffmpeg напрямую
+            subprocess.run(['ffmpeg', '-i', self.file_path, wav_path], check=True)
+            logger.info(f"Successfully converted {self.file_path} to {wav_path}")
+            return wav_path
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Error converting file: {e}")
             raise
 
+
+    def split_audio(self, segment_length_ms=25000):
+        audio = AudioSegment.from_wav(self.wav_file_path)
         return [audio[i:i + segment_length_ms] for i in range(0, len(audio), segment_length_ms)]
+
 
     def process_audio(self):
         segments = self.split_audio()
@@ -64,17 +60,17 @@ class AudioProcessor:
                 try:
                     text = recognizer.recognize_google(audio)
                 except sr.RequestError as e:
-                    text = "[recognition failed]"
-                    logger.error(f"RequestError during recognition: {str(e)}")
+                    logger.error(f"Could not request results from Google Speech Recognition service; {e}")
+                    text = None
                 except sr.UnknownValueError:
+                    logger.warning(f"Google Speech Recognition could not understand audio segment {i}")
                     text = "[recognition failed]"
-                    logger.error("UnknownValueError during recognition")
 
             transcribed_texts.append(text)
             os.remove(segment_path)
 
-        final_transcription = " ".join(transcribed_texts)
-        if self.wav_file_path != self.file_path:
+        final_transcription = " ".join(filter(None, transcribed_texts))
+        if self.wav_file_path!=self.file_path:
             os.remove(self.wav_file_path)
 
         return final_transcription

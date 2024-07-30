@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session
-from models import File as FileModel, Transcription as TranscriptionModel
+from models import File, Transcription
 
 class FileRepository:
     def __init__(self, db: Session):
         self.db = db
 
     def create_file(self, filename: str, file_type: str, file_path: str, status: str):
-        db_file = FileModel(
+        db_file = File(
             filename=filename,
             file_type=file_type,
             file_path=file_path,
@@ -18,11 +18,12 @@ class FileRepository:
         return db_file
 
     def create_transcription(self, file_id: int, text: str, language: str):
-        db_transcription = TranscriptionModel(
+        transcription = Transcription(
             file_id=file_id,
             text=text,
             language=language
         )
-        self.db.add(db_transcription)
+        self.db.add(transcription)
         self.db.commit()
-        return db_transcription
+        self.db.refresh(transcription)
+        return transcription
