@@ -1,0 +1,7 @@
+tmp
+.venv
+.idea
+.DS_Store
+__pycache__
+.env
+export_structure.py
