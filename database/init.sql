@@ -12,6 +12,7 @@ CREATE TABLE transcriptions (
     file_id INTEGER REFERENCES files(id),
     text TEXT NOT NULL,
     language VARCHAR(50),
+    translated_text TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

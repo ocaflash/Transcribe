@@ -6,3 +6,4 @@ tmp
 __pycache__
 .env
 export_structure.py
+*.txt
