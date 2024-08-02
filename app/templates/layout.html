@@ -7,9 +7,35 @@
     <title>{% block title %}Transcription App{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .sidebar {
-            min-height: 100vh;
+        body {
             background-color: #f8f9fa;
+        }
+        .sidebar {
+            background-color: #2f1e4d;
+            color: #c3b9d5;
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+        .sidebar .nav-link {
+            color: #c3b9d5;
+        }
+        .sidebar .nav-link:hover {
+            color: #ffffff;
+        }
+        .main-content {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            padding: 20px;
+        }
+        .btn-primary {
+            background-color: #6c5fc7;
+            border-color: #6c5fc7;
+        }
+        .btn-primary:hover {
+            background-color: #5a4db3;
+            border-color: #5a4db3;
         }
     </style>
 </head>
@@ -17,7 +43,7 @@
     <div class="container-fluid">
         <div class="row">
             <nav class="col-md-3 col-lg-2 d-md-block sidebar">
-                <div class="position-sticky pt-3">
+                <div class="position-sticky">
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('upload') }}">
@@ -39,7 +65,9 @@
             </nav>
 
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                {% block content %}{% endblock %}
+                <div class="main-content">
+                    {% block content %}{% endblock %}
+                </div>
             </main>
         </div>
     </div>

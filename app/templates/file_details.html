@@ -1,18 +1,40 @@
-<!-- app/templates/file_details.html -->
 {% extends "layout.html" %}
 
 {% block title %}{{ file.filename }} - Details{% endblock %}
 
 {% block content %}
 <h1 class="mb-4">{{ file.filename }}</h1>
-<p><strong>Description:</strong> {{ file.description }}</p>
-<p><strong>Tag:</strong> {{ file.tag }}</p>
-<p><strong>Upload Date:</strong> {{ file.upload_date }}</p>
-<p><strong>Status:</strong> {{ file.status }}</p>
-<p><strong>Google Drive Link:</strong> <a href="{{ file.drive_file_link }}" target="_blank">View File</a></p>
-<h2 class="mt-4">Transcription</h2>
-<p>{{ file.transcription }}</p>
-<h2 class="mt-4">Translation (Russian)</h2>
-<p>{{ file.translated_text }}</p>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Basic Information
+    </div>
+    <div class="card-body">
+        <p><strong>Description:</strong> {{ file.description }}</p>
+        <p><strong>Tag:</strong> {{ file.tag }}</p>
+        <p><strong>Upload Date:</strong> {{ file.upload_date }}</p>
+        <p><strong>Status:</strong> {{ file.status }}</p>
+        <p><strong>Google Drive Link:</strong> <a href="{{ file.drive_file_link }}" target="_blank">View File</a></p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Transcription
+    </div>
+    <div class="card-body">
+        <p>{{ transcription_text }}</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Translation (Russian)
+    </div>
+    <div class="card-body">
+        <p>{{ translated_text }}</p>
+    </div>
+</div>
+
 <a href="{{ url_for('file_list') }}" class="btn btn-primary mt-3">Back to List</a>
 {% endblock %}
