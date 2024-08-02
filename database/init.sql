@@ -3,8 +3,12 @@ CREATE TABLE files (
     filename VARCHAR(255) NOT NULL,
     file_type VARCHAR(50) NOT NULL,
     file_path VARCHAR(255) NOT NULL,
+    drive_file_id VARCHAR(255) NOT NULL,
+    drive_file_link VARCHAR(255) NOT NULL,
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(50) NOT NULL
+    status VARCHAR(50) NOT NULL,
+    description VARCHAR(255),
+    tag VARCHAR(255)
 );
 
 CREATE TABLE transcriptions (

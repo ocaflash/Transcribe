@@ -11,14 +11,13 @@ services:
       - db
     environment:
       - PYTHONPATH=/app
+    volumes:
+      - ./service_account.json:/env/service_account.json:ro
 
   db:
     image: postgres:13
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
-
-volumes:
-  postgres_data:

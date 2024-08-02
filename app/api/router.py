@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from services.transcription import transcribe_audio
 from repositories.file_repository import FileRepository
 from database import get_db
+from utils.google_drive import upload_file_to_drive
 import os
 import logging
 
@@ -11,8 +12,10 @@ router = APIRouter()
 
 @router.post("/api/v1/upload")
 async def upload_file(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+        file: UploadFile = File(...),
+        description: str = None,
+        tag: str = None,
+        db: Session = Depends(get_db)
 ):
     file_repository = FileRepository(db)
 
@@ -23,12 +26,19 @@ async def upload_file(
 
         logger.info(f"File saved at: {file_location}")
 
+        # Upload to Google Drive
+        drive_file_id, drive_file_link = upload_file_to_drive(file_location, file.filename)
+
         # Create file record in database
         db_file = file_repository.create_file(
             filename=file.filename,
             file_type=file.content_type,
             file_path=file_location,
-            status="uploaded"
+            status="uploaded",
+            drive_file_id=drive_file_id,
+            drive_file_link=drive_file_link,
+            description=description,
+            tag=tag
         )
 
         # Transcribe the file
@@ -58,6 +68,9 @@ async def upload_file(
             "file_id": db_file.id,
             "filename": file.filename,
             "status": "transcribed",
+            "drive_file_link": drive_file_link,
+            "description": description,
+            "tag": tag,
             "original_text": transcription_result["original_text"],
             "original_language": transcription_result.get("original_language", "unknown"),
             "translated_text": translated_text
@@ -82,7 +95,19 @@ async def get_file_info(file_id: int, db: Session = Depends(get_db)):
         "filename": file.filename,
         "status": file.status,
         "upload_date": file.upload_date,
-        "transcription": transcription.text if transcription else None,
+        "drive_file_link": file.drive_file_link,
         "language": transcription.language if transcription else None,
+        "transcription": transcription.text if transcription else None,
+        "tag": file.tag,
         "translated_text": transcription.translated_text if transcription else None
     }
+
+@router.post("/api/v1/settings")
+async def save_settings(
+    google_drive_folder: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    # Here you would save the settings to a configuration file or database
+    # For now, we'll just log the received setting
+    logger.info(f"Received new Google Drive Folder ID: {google_drive_folder}")
+    return {"message": "Settings saved successfully"}

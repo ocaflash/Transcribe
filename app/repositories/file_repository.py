@@ -9,13 +9,18 @@ class FileRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_file(self, filename: str, file_type: str, file_path: str, status: str):
+
+    def create_file(self, filename: str, file_type: str, file_path: str, status: str, drive_file_id: str, drive_file_link: str, description: str = None, tag: str = None):
         db_file = File(
             filename=filename,
             file_type=file_type,
             file_path=file_path,
             status=status,
-            upload_date=datetime.utcnow()
+            upload_date=datetime.utcnow(),
+            drive_file_id=drive_file_id,
+            drive_file_link=drive_file_link,
+            description=description,
+            tag=tag
         )
         self.db.add(db_file)
         self.db.commit()
@@ -38,6 +43,8 @@ class FileRepository:
         logger.info(f"Created transcription: id={transcription.id}, file_id={file_id}")
         return transcription
 
+    def get_all_files(self):
+        return self.db.query(File).all()
     def get_file_by_id(self, file_id: int):
         return self.db.query(File).filter(File.id == file_id).first()
 

@@ -12,6 +12,10 @@ class File(Base):
     file_path = Column(String)
     status = Column(String)
     upload_date = Column(DateTime, default=datetime.utcnow)
+    drive_file_id = Column(String)
+    drive_file_link = Column(String)
+    description = Column(String)
+    tag = Column(String)
 
     transcriptions = relationship("Transcription", back_populates="file")
 

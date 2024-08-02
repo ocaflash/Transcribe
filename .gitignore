@@ -7,3 +7,4 @@ __pycache__
 .env
 export_structure.py
 *.txt
+service_account.json

@@ -1,0 +1,22 @@
+<!-- app/templates/file_list.html -->
+{% extends "layout.html" %}
+
+{% block title %}Processed Files{% endblock %}
+
+{% block content %}
+<h1 class="my-4">Processed Files</h1>
+<div class="row">
+    {% for file in files %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ file.filename }}</h5>
+                <p class="card-text">{{ file.description }}</p>
+                <p class="card-text"><small class="text-muted">Tag: {{ file.tag }}</small></p>
+                <a href="{{ url_for('file_details', file_id=file.id) }}" class="btn btn-primary">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
