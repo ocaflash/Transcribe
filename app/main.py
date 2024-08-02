@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from api.router import router as api_router
 from database import get_db
@@ -8,6 +9,9 @@ from models import Transcription
 
 app = FastAPI()
 app.include_router(api_router)
+
+# Монтируем директорию для статических файлов
+app.mount("/static", StaticFiles(directory="templates/static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from services.transcription import transcribe_audio
 from repositories.file_repository import FileRepository
 from database import get_db
-from utils.google_drive import upload_file_to_drive
+from utils.google_drive import upload_file_to_drive, delete_file_from_drive
 import os
 import logging
 
@@ -111,3 +111,23 @@ async def save_settings(
     # For now, we'll just log the received setting
     logger.info(f"Received new Google Drive Folder ID: {google_drive_folder}")
     return {"message": "Settings saved successfully"}
+
+@router.delete("/api/v1/file/{file_id}")
+async def delete_file(file_id: int, db: Session = Depends(get_db)):
+    file_repository = FileRepository(db)
+    file = file_repository.get_file_by_id(file_id)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Delete from Google Drive
+    if file.drive_file_id:
+        delete_file_from_drive(file.drive_file_id)
+
+    # Delete from database
+    file_repository.delete_file(file_id)
+
+    # Delete local file if it exists
+    if os.path.exists(file.file_path):
+        os.remove(file.file_path)
+
+    return {"message": "File deleted successfully"}

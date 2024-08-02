@@ -58,3 +58,11 @@ class FileRepository:
             self.db.commit()
             self.db.refresh(file)
         return file
+
+    def delete_file(self, file_id: int):
+        file = self.get_file_by_id(file_id)
+        if file:
+            self.db.delete(file)
+            self.db.commit()
+            return True
+        return False

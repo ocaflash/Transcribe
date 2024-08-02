@@ -1,0 +1,54 @@
+body {
+    background-color: #f8f9fa;
+}
+.sidebar {
+    background-color: #2f1e4d;
+    color: #c3b9d5;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 250px;
+    padding-top: 20px;
+}
+.sidebar .nav-link {
+    color: #c3b9d5;
+}
+.sidebar .nav-link:hover {
+    color: #ffffff;
+}
+.main-content {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    padding: 20px;
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+.btn-primary {
+    background-color: #6c5fc7;
+    border-color: #6c5fc7;
+}
+.btn-primary:hover {
+    background-color: #5a4db3;
+    border-color: #5a4db3;
+}
+
+.record-card {
+    position: relative;
+    /* другие стили */
+}
+
+.delete-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.delete-file {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}

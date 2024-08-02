@@ -17,7 +17,7 @@ class File(Base):
     drive_file_link = Column(String)
     description = Column(String)
     tag = Column(String)
-
+    drive_file_id = Column(String)
     transcriptions = relationship("Transcription", back_populates="file")
 
 class Transcription(Base):
