@@ -1,5 +1,7 @@
 from pydub import AudioSegment
+import logging
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 class AudioSplitter:
     def __init__(self, wav_file_path: str):
         self.wav_file_path = wav_file_path

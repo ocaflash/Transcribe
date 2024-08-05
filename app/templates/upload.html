@@ -42,27 +42,56 @@ document.getElementById('upload-form').addEventListener('submit', function(e) {
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
+            console.log('XHR readyState 4');
             if (xhr.status === 200) {
+                console.log('XHR status 200');
                 var response = JSON.parse(xhr.responseText);
-                document.getElementById('status-messages').innerHTML += '<p>File uploaded successfully. Starting processing...</p>';
+                document.getElementById('status-messages').innerHTML = '<p>File uploaded successfully. Starting processing...</p>';
+
+                // Show the progress container
+                document.getElementById('progress-container').style.display = 'block';
 
                 // Start listening for processing status updates
                 var eventSource = new EventSource(`/api/v1/file-processing-status/${response.file_id}`);
                 eventSource.onmessage = function(event) {
+                    console.log('EventSource message received');
                     var data = JSON.parse(event.data);
-                    document.getElementById('upload-progress').style.width = data.progress + '%';
-                    document.getElementById('status-messages').innerHTML = `<p>Status: ${data.status}, Progress: ${data.progress}%</p>`;
 
-                    if (data.status === 'completed') {
+                    // Update progress
+                    document.getElementById('upload-progress').style.width = data.progress + '%';
+                    document.getElementById('status-messages').innerHTML = `
+                        <p>Status: ${data.status}</p>
+                        <p>Progress: ${data.progress}%</p>
+                        <p>${data.additional_info || ''}</p>
+                    `;
+
+                    // Check for completion
+                    if (data.status === 'transcribed' && data.progress === 100) {
+                        console.log('Processing completed');
                         eventSource.close();
+                        // Hide progress container and show completion message
+                        document.getElementById('progress-container').style.display = 'none';
+                        document.getElementById('status-messages').innerHTML += '<p>Processing completed!</p>';
+
+                        // Clear the form
+                        document.getElementById('upload-form').reset();
+                        console.log('Form has been reset');
                     }
                 };
+
+                eventSource.onerror = function() {
+                    console.error('EventSource error');
+                    document.getElementById('status-messages').innerHTML += '<p>Error: Failed to receive updates.</p>';
+                };
             } else {
+                console.error('XHR status not 200');
                 document.getElementById('status-messages').innerHTML += '<p>Error: ' + xhr.statusText + '</p>';
             }
         }
     };
 
+    // Start uploading
+    console.log('Starting upload');
     document.getElementById('progress-container').style.display = 'block';
     xhr.send(formData);
 });

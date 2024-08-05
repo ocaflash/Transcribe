@@ -5,6 +5,9 @@ from repositories.file_repository import FileRepository
 import logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+
 
 class AudioProcessor:
     def __init__(self, file_path: str, file_id: int, file_repository: FileRepository):
