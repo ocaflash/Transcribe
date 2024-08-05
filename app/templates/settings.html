@@ -1,0 +1,41 @@
+<!-- app/templates/settings.html -->
+{% extends "layout.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Settings</h1>
+<form id="settings-form">
+    <div class="mb-3">
+        <label for="google_drive_folder" class="form-label">Google Drive Folder ID</label>
+        <input type="text" class="form-control" id="google_drive_folder" name="google_drive_folder" value="{{ google_drive_folder_id }}">
+    </div>
+    <!-- Add more settings fields here as needed -->
+    <button type="submit" class="btn btn-primary">Save Settings</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('settings-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var formData = new FormData(this);
+    var xhr = new XMLHttpRequest();
+
+    xhr.open('POST', '/api/v1/settings', true);
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                alert('Settings saved successfully');
+            } else {
+                alert('Error saving settings: ' + xhr.statusText);
+            }
+        }
+    };
+
+    xhr.send(formData);
+});
+</script>
+{% endblock %}

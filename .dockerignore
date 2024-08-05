@@ -4,3 +4,6 @@ tmp
 .DS_Store
 __pycache__
 Dockerfile
+**/__pycache__
+**/*.pyc
+service_account.json
