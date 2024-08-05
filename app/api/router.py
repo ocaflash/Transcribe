@@ -131,3 +131,25 @@ async def delete_file(file_id: int, db: Session = Depends(get_db)):
         os.remove(file.file_path)
 
     return {"message": "File deleted successfully"}
+
+@router.put("/api/v1/file/{file_id}")
+async def update_file(
+    file_id: int,
+    description: str = Form(None),
+    tag: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    file_repository = FileRepository(db)
+    file = file_repository.get_file_by_id(file_id)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if description is not None:
+        file.description = description
+    if tag is not None:
+        file.tag = tag
+
+    db.commit()
+    db.refresh(file)
+
+    return {"message": "File updated successfully"}

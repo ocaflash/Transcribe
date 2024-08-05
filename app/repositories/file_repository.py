@@ -66,3 +66,15 @@ class FileRepository:
             self.db.commit()
             return True
         return False
+
+
+    def update_file(self, file_id: int, description: str = None, tag: str = None):
+        file = self.get_file_by_id(file_id)
+        if file:
+            if description is not None:
+                file.description = description
+            if tag is not None:
+                file.tag = tag
+            self.db.commit()
+            self.db.refresh(file)
+        return file

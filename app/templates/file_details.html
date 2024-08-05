@@ -8,13 +8,26 @@
 <div class="card mb-4">
     <div class="card-header">
         Basic Information
+        <button id="edit-button" class="btn btn-sm btn-primary float-end">
+            <i class="fas fa-pencil-alt"></i> Edit
+        </button>
     </div>
     <div class="card-body">
-        <p><strong>Description:</strong> {{ file.description }}</p>
-        <p><strong>Tag:</strong> {{ file.tag }}</p>
-        <p><strong>Upload Date:</strong> {{ file.upload_date }}</p>
-        <p><strong>Status:</strong> {{ file.status }}</p>
-        <p><strong>Google Drive Link:</strong> <a href="{{ file.drive_file_link }}" target="_blank">View File</a></p>
+        <form id="edit-form">
+            <div class="mb-3">
+                <label for="description" class="form-label"><strong>Description:</strong></label>
+                <p id="description-text">{{ file.description }}</p>
+                <input type="text" class="form-control" id="description" name="description" value="{{ file.description }}" style="display: none;">
+            </div>
+            <div class="mb-3">
+                <label for="tag" class="form-label"><strong>Tag:</strong></label>
+                <p id="tag-text">{{ file.tag }}</p>
+                <input type="text" class="form-control" id="tag" name="tag" value="{{ file.tag }}" style="display: none;">
+            </div>
+            <p><strong>Upload Date:</strong> {{ file.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            <p><strong>Google Drive Link:</strong> <a href="{{ file.drive_file_link }}" target="_blank">View File</a></p>
+            <button type="submit" id="save-button" class="btn btn-primary" style="display: none;">Save Changes</button>
+        </form>
     </div>
 </div>
 
@@ -37,4 +50,50 @@
 </div>
 
 <a href="{{ url_for('file_list') }}" class="btn btn-primary mt-3">Back to List</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const editButton = document.getElementById('edit-button');
+const saveButton = document.getElementById('save-button');
+const descriptionText = document.getElementById('description-text');
+const descriptionInput = document.getElementById('description');
+const tagText = document.getElementById('tag-text');
+const tagInput = document.getElementById('tag');
+
+editButton.addEventListener('click', function() {
+    descriptionText.style.display = 'none';
+    descriptionInput.style.display = 'block';
+    tagText.style.display = 'none';
+    tagInput.style.display = 'block';
+    saveButton.style.display = 'block';
+    editButton.style.display = 'none';
+});
+
+document.getElementById('edit-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    fetch('/api/v1/file/{{ file.id }}', {
+        method: 'PUT',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Changes saved successfully');
+        descriptionText.textContent = descriptionInput.value;
+        tagText.textContent = tagInput.value;
+        descriptionText.style.display = 'block';
+        descriptionInput.style.display = 'none';
+        tagText.style.display = 'block';
+        tagInput.style.display = 'none';
+        saveButton.style.display = 'none';
+        editButton.style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving changes.');
+    });
+});
+</script>
 {% endblock %}

@@ -15,14 +15,11 @@ app.mount("/static", StaticFiles(directory="templates/static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-@app.get("/")
-async def index(request: Request):
-    return templates.TemplateResponse("upload.html", {"request": request})
-
 @app.get("/upload")
 async def upload(request: Request):
     return templates.TemplateResponse("upload.html", {"request": request})
 
+@app.get("/")
 @app.get("/files")
 async def file_list(request: Request, db: Session = Depends(get_db)):
     file_repository = FileRepository(db)
