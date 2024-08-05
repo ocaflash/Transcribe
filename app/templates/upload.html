@@ -40,18 +40,23 @@ document.getElementById('upload-form').addEventListener('submit', function(e) {
 
     xhr.open('POST', '/api/v1/upload', true);
 
-    xhr.upload.onprogress = function(e) {
-        if (e.lengthComputable) {
-            var percentComplete = (e.loaded / e.total) * 100;
-            document.getElementById('upload-progress').style.width = percentComplete + '%';
-        }
-    };
-
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
                 var response = JSON.parse(xhr.responseText);
-                document.getElementById('status-messages').innerHTML += '<p>File uploaded and processed successfully.</p>';
+                document.getElementById('status-messages').innerHTML += '<p>File uploaded successfully. Starting processing...</p>';
+
+                // Start listening for processing status updates
+                var eventSource = new EventSource(`/api/v1/file-processing-status/${response.file_id}`);
+                eventSource.onmessage = function(event) {
+                    var data = JSON.parse(event.data);
+                    document.getElementById('upload-progress').style.width = data.progress + '%';
+                    document.getElementById('status-messages').innerHTML = `<p>Status: ${data.status}, Progress: ${data.progress}%</p>`;
+
+                    if (data.status === 'completed') {
+                        eventSource.close();
+                    }
+                };
             } else {
                 document.getElementById('status-messages').innerHTML += '<p>Error: ' + xhr.statusText + '</p>';
             }
