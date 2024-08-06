@@ -9,7 +9,6 @@ class FileRepository:
     def __init__(self, db: Session):
         self.db = db
 
-
     def create_file(self, filename: str, file_type: str, file_path: str, status: str, drive_file_id: str, drive_file_link: str, description: str = None, tag: str = None):
         db_file = File(
             filename=filename,
@@ -50,6 +49,7 @@ class FileRepository:
 
     def get_transcription_by_file_id(self, file_id: int):
         return self.db.query(Transcription).filter(Transcription.file_id == file_id).first()
+
 
     def update_file_status(self, file_id: int, new_status: str):
         file = self.get_file_by_id(file_id)

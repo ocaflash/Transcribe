@@ -1,22 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from sqlalchemy.orm import Session
-from services.transcription import transcribe_audio
-from repositories.file_repository import FileRepository
 from database import get_db
+from repositories.file_repository import FileRepository
+from fastapi.responses import StreamingResponse
+from services.transcription import transcribe_audio
 from utils.google_drive import upload_file_to_drive, delete_file_from_drive
-import os
-import logging
+import asyncio, json, os, logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 router = APIRouter()
+
+
 
 @router.post("/api/v1/upload")
 async def upload_file(
         file: UploadFile = File(...),
-        description: str = None,
-        tag: str = None,
+        description: str = Form(None),
+        tag: str = Form(None),
         db: Session = Depends(get_db)
 ):
+    logger.info("Upload endpoint called")
     file_repository = FileRepository(db)
 
     try:
@@ -27,9 +31,12 @@ async def upload_file(
         logger.info(f"File saved at: {file_location}")
 
         # Upload to Google Drive
+        logger.info("Uploading file to Google Drive...")
         drive_file_id, drive_file_link = upload_file_to_drive(file_location, file.filename)
+        logger.info(f"File uploaded to Google Drive with ID: {drive_file_id}, Link: {drive_file_link}")
 
         # Create file record in database
+        logger.info("Creating file record in the database...")
         db_file = file_repository.create_file(
             filename=file.filename,
             file_type=file.content_type,
@@ -43,15 +50,15 @@ async def upload_file(
 
         # Transcribe the file
         logger.info(f"Starting transcription for file: {file_location}")
-        transcription_result = transcribe_audio(file_location)
-        logger.info(f"Transcription completed. Result: {transcription_result}")
+        transcription_result = transcribe_audio(file_location, db_file.id, file_repository)
+        logger.info(f"Transcription result: {transcription_result}")
 
         if transcription_result["original_text"] == "" or transcription_result["original_text"] == "[recognition failed]":
             logger.warning(f"Speech recognition failed for file: {file_location}")
             file_repository.update_file_status(db_file.id, "failed")
             return {"error": "Speech recognition failed", "details": transcription_result}
 
-        # Update file status and create transcription record
+        logger.info("Transcription completed. Updating file status and creating transcription record...")
         file_repository.update_file_status(db_file.id, "transcribed")
         translated_text = transcription_result["translation"].get("ru", "[translation failed]")
         transcription = file_repository.create_transcription(
@@ -63,6 +70,7 @@ async def upload_file(
 
         # Remove temporary file
         os.remove(file_location)
+        logger.info(f"Temporary file removed: {file_location}")
 
         return {
             "file_id": db_file.id,
@@ -131,6 +139,47 @@ async def delete_file(file_id: int, db: Session = Depends(get_db)):
         os.remove(file.file_path)
 
     return {"message": "File deleted successfully"}
+
+@router.get("/api/v1/file-processing-status/{file_id}")
+async def file_processing_status(file_id: int, request: Request, db: Session = Depends(get_db)):
+    file_repository = FileRepository(db)
+
+    async def event_generator():
+        while True:
+            if await request.is_disconnected():
+                break
+
+            file = file_repository.get_file_by_id(file_id)
+
+            # Initialize progress variable
+            progress = calculate_progress(file)
+
+            yield f"data: {json.dumps({'status': file.status, 'progress': progress})}\n\n"
+
+            if file.status == "transcribed":
+                break
+
+            await asyncio.sleep(1)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+def calculate_progress(file):
+    if file.status == "uploaded":
+        return 0
+    elif file.status == "transcribed":
+        return 100
+    elif file.status.startswith("processing:"):
+        try:
+            return int(file.status.split(":")[1])
+        except (IndexError, ValueError):
+            return 50
+    elif file.status == "transcribing":
+        return 30
+    elif file.status == "translating":
+        return 70
+    else:
+        return 0
 
 @router.put("/api/v1/file/{file_id}")
 async def update_file(
