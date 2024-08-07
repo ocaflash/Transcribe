@@ -6,12 +6,11 @@ from fastapi.responses import StreamingResponse
 from services.transcription import transcribe_audio
 from utils.google_drive import upload_file_to_drive, delete_file_from_drive
 import asyncio, json, os, logging
+from exceptions import FileProcessingError
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 router = APIRouter()
-
-
 
 @router.post("/api/v1/upload")
 async def upload_file(
@@ -48,7 +47,6 @@ async def upload_file(
             tag=tag
         )
 
-        # Transcribe the file
         logger.info(f"Starting transcription for file: {file_location}")
         transcription_result = transcribe_audio(file_location, db_file.id, file_repository)
         logger.info(f"Transcription result: {transcription_result}")
@@ -56,7 +54,7 @@ async def upload_file(
         if transcription_result["original_text"] == "" or transcription_result["original_text"] == "[recognition failed]":
             logger.warning(f"Speech recognition failed for file: {file_location}")
             file_repository.update_file_status(db_file.id, "failed")
-            return {"error": "Speech recognition failed", "details": transcription_result}
+            raise FileProcessingError("Speech recognition failed")
 
         logger.info("Transcription completed. Updating file status and creating transcription record...")
         file_repository.update_file_status(db_file.id, "transcribed")

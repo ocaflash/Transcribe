@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -5,14 +6,14 @@ from sqlalchemy.orm import Session
 from api.router import router as api_router
 from database import get_db
 from repositories.file_repository import FileRepository
-from models import Transcription
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 app.include_router(api_router)
-
-# Монтируем директорию для статических файлов
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/upload")
