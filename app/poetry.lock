@@ -333,7 +333,7 @@ files = [
 ]
 
 [package.dependencies]
-httpx = "0.13.3"
+httpx = "0.23.0"
 
 [[package]]
 name = "greenlet"
